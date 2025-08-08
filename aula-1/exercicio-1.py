@@ -24,3 +24,22 @@ O programa deve modular e utilizar as estruturas de controle e funções.
    - Imprimir a média e o status para cada disciplina
 '''
 
+def calcular_media(notas):
+    """
+    Calcula a média de uma lista de notas
+    - recebe por parâmetro de uma lista de notas
+    - retorna a média das notas
+    """
+    soma = 0
+
+    #percorrer a lista de notas
+    # para cada nota na LISTA de notas/ uma boa prática é sempre colocar o valor como o singular da lista, por exemplo a lista NOTAS, colocamos NOTA
+    for nota in notas: # pra cada variável na lista
+        soma += nota # soma = soma + nota / a soma acumula o valor de nota, no segundo laço, ele vai ter o valor da primeira nota, depois na terceira vai ter o valor da primeira + segunda / acumular valor na variável soma
+
+    if len(notas) >0:
+        return soma / len(nota) # dividindo pelo tamanho da listinha de NOTAS / LEN 
+    else:
+        return 0
+    
+
