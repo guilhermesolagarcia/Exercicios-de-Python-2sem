@@ -11,7 +11,7 @@ O programa deve modular e utilizar as estruturas de controle e funções.
  -Função verificar_aprovação(media, media_minima)
    - Deve receber a média das notas e a média mínima para aprovação
    - Deve usar condicionais para verificar o status do aluno
-   - Se a média for maior que a média mínima, retornar a String "Aprovado"
+   - Se a média for maior que a média mínima (7), retornar a String "Aprovado"
    - Se a média for maior ou igual a 5.0 e menor do que a média mínima, retornar a String "Recuperação"
    - Caso contrário, retorne a String "Reprovado"
  - Função Principal main()
@@ -42,4 +42,18 @@ def calcular_media(notas):
     else:
         return 0
     
+def verificar_aprovacao(media, media_minima):
+    """
+    Verifica o status de aprovação do aluno
+    - recebe a média e a média mínima por parâmetro
+    - retorna o status do aluno - Aprovado - Recuperação - Reprovado
+    """
+    if media >= media_minima:
+        return "Aprovado"
+    elif media >= 5 and media < media_minima:
+        return "Recuperação"
+    else:
+        return "Reprovado"
+    
+
 
