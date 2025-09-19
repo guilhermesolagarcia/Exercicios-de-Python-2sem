@@ -10,9 +10,7 @@ SERVICE_NAME = "orcl"
 
 
 def get_conexao():
-    """
-    Tenta estabelecer uma conexão com o banco de dados Oracle.
-    """
+    """Tenta estabelecer uma conexão com o banco de dados Oracle."""
     try:
         conn = oracledb.connect(
             user=USER,
@@ -30,14 +28,27 @@ def get_conexao():
 
 def criar_tabelas():
     """
-    Cria todas as tabelas necessárias no banco de dados.
+    Deleta e recria todas as tabelas necessárias no banco de dados.
+    Isso garante que a estrutura de auto-incremento e constraints esteja correta.
     """
     conn = get_conexao()
     if conn is None:
         return
 
     try:
-        sql_commands = [
+        # Comandos para dropar as tabelas na ordem correta para evitar erros de chave estrangeira
+        drop_commands = [
+            "DROP TABLE acesso CASCADE CONSTRAINTS",
+            "DROP TABLE video_tutoriais CASCADE CONSTRAINTS",
+            "DROP TABLE usuario CASCADE CONSTRAINTS",
+            "DROP TABLE perfil CASCADE CONSTRAINTS",
+            "DROP TABLE categoria_tutorial CASCADE CONSTRAINTS",
+            "DROP TABLE lembretes CASCADE CONSTRAINTS",
+            "DROP TABLE suporte CASCADE CONSTRAINTS"
+        ]
+
+        # Comandos para criar as tabelas com todas as constraints
+        create_commands = [
             """
             CREATE TABLE usuario (
                 id_usuario INTEGER GENERATED ALWAYS AS IDENTITY,
@@ -46,10 +57,10 @@ def criar_tabelas():
                 data_nasc DATE NOT NULL,
                 user_admin CHAR(1) NOT NULL,
                 CONSTRAINT usuario_pk PRIMARY KEY (id_usuario),
-                CONSTRAINT usuario_cpf_un UNIQUE (cpf_usuario)
+                CONSTRAINT usuario_cpf_un UNIQUE (cpf_usuario),
+                CONSTRAINT usuario_admin_ck CHECK (user_admin IN ('S', 'N'))
             )
             """,
-            "ALTER TABLE usuario ADD CONSTRAINT usuario_admin_ck CHECK (user_admin IN ('S', 'N'))",
             """
             CREATE TABLE perfil(
                 id_perfil INTEGER GENERATED ALWAYS AS IDENTITY,
@@ -102,22 +113,35 @@ def criar_tabelas():
             )
             """
         ]
-
+        
         with conn.cursor() as cursor:
-            for command in sql_commands:
+            # Dropando tabelas existentes para garantir a recriação correta
+            print("\nDropping tabelas existentes...")
+            for command in drop_commands:
                 try:
                     cursor.execute(command)
-                    print(f"Comando executado: {command.split()[2]}...")
                 except oracledb.Error as e:
-                    # Ignore "table or view already exists" error
-                    if e.args[0].code == 955:
-                        print("Tabela já existe. Continuando...")
+                    if e.args[0].code == 942:  # ORA-00942: table or view does not exist
+                        pass
                     else:
-                        print(f"Erro ao executar o comando: {e}")
-                        conn.rollback()
+                        print(f"Erro ao dropar tabela: {e}")
                         raise
+
+            # Criando as tabelas
+            print("\nCriando tabelas...")
+            for command in create_commands:
+                try:
+                    cursor.execute(command)
+                    print(f"Tabela criada: {command.split()[2]}")
+                except oracledb.Error as e:
+                    if e.args[0].code == 955: # ORA-00955: name is already used by an existing object
+                        print(f"Tabela já existe: {command.split()[2]}. Continuando...")
+                    else:
+                        print(f"Erro ao criar tabela: {e}")
+                        raise
+        
         conn.commit()
-        print('Todas as tabelas foram criadas/verificadas com sucesso!')
+        print('\nTodas as tabelas foram criadas/verificadas com sucesso!')
     except oracledb.Error as e:
         print(f'Erro no processo de criação de tabelas: {e}')
     finally:
@@ -125,6 +149,8 @@ def criar_tabelas():
             conn.close()
 
 # --- Funções de Operações com Banco de Dados ---
+# As funções abaixo já estavam corretas e não precisam de modificação
+# a não ser a remoção de "conn.rollback()" desnecessários.
 
 def inserir_usuario(cpf, nome, data_nasc, user_admin):
     """Insere um novo usuário."""
@@ -137,7 +163,6 @@ def inserir_usuario(cpf, nome, data_nasc, user_admin):
             print(f'Usuário {nome} adicionado com sucesso!')
     except oracledb.Error as e:
         print(f'Erro ao inserir usuário: {e}')
-        # A linha "if conn: conn.rollback()" foi removida
 
 def alterar_permissao_admin(id_usuario, permissao):
     """Altera a permissão de administrador de um usuário."""
@@ -160,9 +185,7 @@ def deletar_usuario(id_usuario):
     try:
         with get_conexao() as conn:
             with conn.cursor() as cursor:
-                # Primeiro, deleta registros dependentes (acesso), se houver.
                 cursor.execute("DELETE FROM acesso WHERE id_usuario = :1", [id_usuario])
-                # Em seguida, deleta o usuário.
                 cursor.execute("DELETE FROM usuario WHERE id_usuario = :1", [id_usuario])
                 if cursor.rowcount > 0:
                     conn.commit()
@@ -189,7 +212,6 @@ def deletar_categoria_tutorial(id_categoria):
     try:
         with get_conexao() as conn:
             with conn.cursor() as cursor:
-                # Deleta vídeos associados primeiro devido à restrição de chave estrangeira
                 cursor.execute("DELETE FROM video_tutoriais WHERE id_categoria = :1", [id_categoria])
                 cursor.execute("DELETE FROM categoria_tutorial WHERE id_categoria = :1", [id_categoria])
                 if cursor.rowcount > 0:
@@ -262,9 +284,7 @@ def listar_categorias():
 # --- Menu Interativo ---
 
 def menu():
-    """
-    Exibe um menu interativo para o usuário.
-    """
+    """Exibe um menu interativo para o usuário."""
     while True:
         print("\n--- Menu de Gerenciamento de Sistema ---")
         print("1. Inserir novo usuário")
@@ -322,9 +342,7 @@ def menu():
         except ValueError:
             print("Entrada inválida. Por favor, digite um número para a opção.")
         except oracledb.DatabaseError as e:
-            # Captura erros de banco de dados, como IDs inexistentes em chaves estrangeiras
             print(f"Erro no banco de dados: {e}")
-
 
 if __name__ == '__main__':
     criar_tabelas()

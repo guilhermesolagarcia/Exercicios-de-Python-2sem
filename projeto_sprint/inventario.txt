@@ -1,0 +1,5 @@
+
+Fone de Ouvido,120,30
+Celular,3000.00,5
+Coca Cola,10.00,59
+Camiseta,30.00,50
