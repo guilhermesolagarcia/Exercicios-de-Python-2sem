@@ -154,7 +154,6 @@ def alterar_permissao_admin(id_usuario, permissao):
                     print(f"Nenhum usuário com ID {id_usuario} foi encontrado.")
     except oracledb.Error as e:
         print(f'Erro ao alterar permissão: {e}')
-        if conn: conn.rollback()
 
 def deletar_usuario(id_usuario):
     """Deleta um usuário e seus acessos associados."""
@@ -172,7 +171,6 @@ def deletar_usuario(id_usuario):
                     print(f"Nenhum usuário com ID {id_usuario} foi encontrado.")
     except oracledb.Error as e:
         print(f'Erro ao deletar usuário: {e}')
-        if conn: conn.rollback()
 
 def criar_categoria_tutorial(nome, descricao):
     """Cria uma nova categoria de tutorial."""
@@ -185,7 +183,6 @@ def criar_categoria_tutorial(nome, descricao):
             print(f"Categoria '{nome}' criada com sucesso.")
     except oracledb.Error as e:
         print(f'Erro ao criar categoria: {e}')
-        if conn: conn.rollback()
 
 def deletar_categoria_tutorial(id_categoria):
     """Deleta uma categoria de tutorial e seus vídeos associados."""
@@ -202,7 +199,6 @@ def deletar_categoria_tutorial(id_categoria):
                     print("Nenhuma categoria encontrada.")
     except oracledb.Error as e:
         print(f'Erro ao deletar categoria: {e}')
-        if conn: conn.rollback()
 
 def criar_video_tutorial(titulo, url_video, id_categoria):
     """Cria um novo vídeo de tutorial."""
@@ -215,7 +211,6 @@ def criar_video_tutorial(titulo, url_video, id_categoria):
             print(f"Tutorial '{titulo}' adicionado com sucesso!")
     except oracledb.Error as e:
         print(f'Erro ao criar vídeo tutorial: {e}')
-        if conn: conn.rollback()
 
 def adicionar_lembrete(nome, data, descricao):
     """Adiciona um novo lembrete."""
@@ -228,7 +223,6 @@ def adicionar_lembrete(nome, data, descricao):
             print(f"Lembrete '{nome}' adicionado com sucesso!")
     except oracledb.Error as e:
         print(f'Erro ao adicionar lembrete: {e}')
-        if conn: conn.rollback()
 
 # --- Funções de listagem para verificação ---
 
@@ -330,6 +324,7 @@ def menu():
         except oracledb.DatabaseError as e:
             # Captura erros de banco de dados, como IDs inexistentes em chaves estrangeiras
             print(f"Erro no banco de dados: {e}")
+
 
 if __name__ == '__main__':
     criar_tabelas()
